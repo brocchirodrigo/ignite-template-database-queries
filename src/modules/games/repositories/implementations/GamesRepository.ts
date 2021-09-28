@@ -13,18 +13,33 @@ export class GamesRepository implements IGamesRepository {
   }
 
   async findByTitleContaining(param: string): Promise<Game[]> {
-    return this.repository
-      .createQueryBuilder()
-      // Complete usando query builder
+    const findTitle = await this.repository
+      // .createQueryBuilder()
+      // .select('games')
+      // .from(Game, 'games')
+      // .where(`lower(games.title) like lower('%:title%')`, {title: param})
+      // .getMany()
+      .query(`select * from public.games g where lower(g.title) like lower('%${param}%')`)
+    
+      return findTitle;
   }
 
   async countAllGames(): Promise<[{ count: string }]> {
-    return this.repository.query(); // Complete usando raw query
+    return await this.repository.query('select count(distinct g.title) from public.games g'); // Complete usando raw query
   }
 
   async findUsersByGameId(id: string): Promise<User[]> {
-    return this.repository
-      .createQueryBuilder()
-      // Complete usando query builder
+    const usersGames = await this.repository
+      // .createQueryBuilder('users')
+      // .leftJoinAndSelect('users_games_games', 'gu', 'user.id = gu."usersId"')
+      // .leftJoinAndSelect('games', 'g', 'gu."usersId" = g.id')
+      // .where(`users.id = :id`, {id: id})
+      // .getRawMany()
+      .query(`select u.* from public.users u 
+      inner join public.users_games_games ugg on u.id = ugg."usersId"
+      inner join public.games g on ugg."gamesId" = g.id
+      where g.id  = '${id}'`)
+
+    return usersGames;
   }
 }
